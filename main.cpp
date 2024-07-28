@@ -2,8 +2,12 @@
 #include <queue>
 #include "board.h"
 
-int main() {
-    Board initialBoard("../board.csv");
+int main(int argc, char** argv) {
+    std::string input_file;
+    if ( argc > 1 ) {
+        input_file = argv[1];
+    }
+    Board initialBoard(input_file);
     std::cout << "Initial Board:" << std::endl;
     initialBoard.printBoard();
     /*try {
