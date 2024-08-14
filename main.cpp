@@ -19,7 +19,9 @@ int main(int argc, char** argv) {
     }*/
     std::queue<BoardStatus> toProcess;
     toProcess.emplace(initialBoard);
+    int iterations = 0;
     while (!toProcess.empty()) {
+        ++iterations;
         BoardStatus currentBoardStatus = toProcess.front();
         Board currentBoard = currentBoardStatus.board;
         toProcess.pop();
@@ -35,6 +37,9 @@ int main(int argc, char** argv) {
                 }
             } else {
                 toProcess.push(newBoardStatus);
+                if (iterations % 100 == 0) {
+                    newBoardStatus.print();
+                }
             }
         }
     }
