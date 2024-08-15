@@ -3,6 +3,11 @@ project(Jump)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(Catch2 CONFIG REQUIRED)
+
+
 add_executable(Jump main.cpp
-        board.cpp
-        board.h)
+        board.cpp)
+add_executable(Tests test.cpp )
+
+target_link_libraries(Tests PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
