@@ -60,15 +60,31 @@ void processNextBoardStatus(std::deque<BoardStatus>& toProcess) {
     }
 }
 
+void printStatistics(int numberOfTokens, int numberOfBoardStatus) {
+    std::cout << "Starting to process Boards with " << numberOfTokens << " tokens" << std::endl;
+    std::cout << "There are " << numberOfBoardStatus << " Boards in the Queue" << std::endl;
+    std::cout << std::endl;
+}
+
 bool findSolution(const Board& initialBoard) {
     std::deque<BoardStatus> toProcess;
     toProcess.emplace_back(initialBoard);
     int iterations = 0;
+    int currentNumberOfTokens = initialBoard.countTokens();
+    printStatistics(currentNumberOfTokens, 1);
     while (!toProcess.empty()) {
+        int numberOfBoardsInCurrentStage;
+        if (toProcess.front().board.countTokens() < currentNumberOfTokens) {
+            currentNumberOfTokens--;
+            numberOfBoardsInCurrentStage = toProcess.size();
+            printStatistics(currentNumberOfTokens, numberOfBoardsInCurrentStage);
+            iterations = 0;
+        }
         processNextBoardStatus(toProcess);
         ++iterations;
         if (iterations % 100 == 0) {
-            toProcess.back().print();
+            std::cout << iterations << "/" << numberOfBoardsInCurrentStage << std::endl;
+            //toProcess.back().print();
         }
 
     }
