@@ -156,6 +156,82 @@ public:
         return true;
     }
 
+    bool is_equivalent(const Board& other) const {
+        // Assuming that all boards have the right size
+        size_t last_index = fields.size() - 1;
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[i][j] != other.fields[i][j]) {
+                    goto oneTurn;
+                }
+            }
+        }
+        return true;
+        oneTurn:
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[j][last_index - i] != other.fields[i][j]) {
+                    goto twoTurns;
+                }
+            }
+        }
+        return true;
+        twoTurns:
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[last_index - i][last_index - j] != other.fields[i][j]) {
+                    goto threeTurns;
+                }
+            }
+        }
+        return true;
+        threeTurns:
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[last_index - j][i] != other.fields[i][j]) {
+                    goto horizontal;
+                }
+            }
+        }
+        return true;
+        horizontal:
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[i][last_index - j] != other.fields[i][j]) {
+                    goto vertical;
+                }
+            }
+        }
+        return true;
+        vertical:
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[last_index - i][j] != other.fields[i][j]) {
+                    goto diagonal;
+                }
+            }
+        }
+        return true;
+        diagonal:
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[j][i] != other.fields[i][j]) {
+                    goto secondDiagonal;
+                }
+            }
+        }
+        return true;
+        secondDiagonal:
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[last_index - j][last_index - i] != other.fields[i][j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     int countTokens() const {
         int tokenCount = 0;
         for (const auto& row : fields) {

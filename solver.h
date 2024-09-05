@@ -26,7 +26,7 @@ bool boardAlreadyInQueue(const Board& board, const std::deque<BoardStatus>& queu
         }
 
         // Check if the boards are equivalent
-        if (it->board == board) {
+        if (it->board.is_equivalent(board)) {
             return true; // The board is already in the queue
         }
     }

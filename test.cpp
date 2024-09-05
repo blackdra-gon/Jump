@@ -32,3 +32,22 @@ TEST_CASE("Duplicate Detection") {
     CHECK(toProcess[0].board == importInitialBoard("../testData/test_duplicate_detection_result.csv"));
 }
 
+TEST_CASE("Detect Equivalent Boards") {
+    Board test_board = importInitialBoard("../testData/test_board_equivalence_base.csv");
+    std::vector<Board> boards;
+    boards.push_back(importInitialBoard("../testData/test_board_equivalence_90.csv"));
+    boards.push_back(importInitialBoard("../testData/test_board_equivalence_180.csv"));
+    boards.push_back(importInitialBoard("../testData/test_board_equivalence_270.csv"));
+    boards.push_back(importInitialBoard("../testData/test_board_equivalence_horizontal.csv"));
+    boards.push_back(importInitialBoard("../testData/test_board_equivalence_vertical.csv"));
+    boards.push_back(importInitialBoard("../testData/test_board_equivalence_diagonal_1.csv"));
+    boards.push_back(importInitialBoard("../testData/test_board_equivalence_diagonal_2.csv"));
+    CHECK(test_board.is_equivalent(test_board));
+    for (auto &other_board: boards) {
+        CHECK(!(test_board == other_board));
+    }
+    for (auto &other_board: boards) {
+        CHECK(test_board.is_equivalent(other_board));
+    }
+}
+
