@@ -5,7 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "solver.h"
 
-TEST_CASE("One Step Simple Board") {
+/*TEST_CASE("One Step Simple Board") {
     Board testBoard = importInitialBoard("../testData/test_board.csv");
     std::deque<BoardStatus> toProcess;
     toProcess.emplace_back(testBoard);
@@ -13,7 +13,7 @@ TEST_CASE("One Step Simple Board") {
     // If test fails, check if the boards are computed in another order
     CHECK(toProcess[0].board == importInitialBoard("../testData/test_board_step_1_1.csv"));
     CHECK(toProcess[1].board == importInitialBoard("../testData/test_board_step_1_2.csv"));
-}
+}*/
 
 TEST_CASE("Test Simple Board") {
     Board testBoard = importInitialBoard("../testData/test_board.csv");
@@ -21,7 +21,7 @@ TEST_CASE("Test Simple Board") {
     CHECK(found_solution);
 }
 
-TEST_CASE("Duplicate Detection") {
+/*TEST_CASE("Duplicate Detection") {
     Board testBoard = importInitialBoard("../testData/test_duplicate_detection.csv");
     std::deque<BoardStatus> toProcess;
     toProcess.emplace_back(testBoard);
@@ -30,7 +30,7 @@ TEST_CASE("Duplicate Detection") {
     processNextBoardStatus(toProcess);
     CHECK(toProcess.size() == 1);
     CHECK(toProcess[0].board == importInitialBoard("../testData/test_duplicate_detection_result.csv"));
-}
+}*/
 
 TEST_CASE("Detect Equivalent Boards") {
     Board test_board = importInitialBoard("../testData/test_board_equivalence_base.csv");

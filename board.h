@@ -60,7 +60,9 @@ public:
     Board(int size) : fields(size, std::vector<Field>(size, FREE)) {}
 
     // Constructor with rows, columns, and initial status
-    Board(int size, Field initialValue) : fields(size, std::vector<Field>(size, initialValue)) {}
+    Board(int size, Field initialValue) : fields(size, std::vector<Field>(size, initialValue)) {
+        numberOfTokens = countTokens();
+    }
 
     // Copy Constructor
     //Board(Board const &board) : fields(board.fields) {}
@@ -101,6 +103,7 @@ public:
         }
 
         fields = tempFields;
+        numberOfTokens = countTokens();
     }
 
     void printBoard() const {
@@ -112,17 +115,6 @@ public:
         }
     }
 
-    void setField(int row, int col, Field field) {
-        if (row >= 0 && row < fields.size() && col >= 0 && col < fields[0].size()) {
-            fields[row][col] = field;
-        } else {
-            std::cerr << "Invalid indices" << std::endl;
-        }
-    }
-
-    void setField(const Position& pos, Field field) {
-        setField(pos.x, pos.y, field);
-    }
 
     Field getField(int row, int col) const {
         if (row >= 0 && row < fields.size() && col >= 0 && col < fields[0].size()) {
@@ -258,6 +250,7 @@ public:
             setField(from, FREE);
             setField(middle, FREE);
             setField(to, TOKEN);
+            numberOfTokens--;
         } else {
             std::cerr << "Turn cannot be applied due to invalid conditions." << std::endl;
         }
@@ -292,10 +285,28 @@ public:
         return possibleTurns;
     }
 
+    int getNumberOfTokens() const {
+        return numberOfTokens;
+    }
+
 
 
 private:
     std::vector<std::vector<Field>> fields;
+    int numberOfTokens;
+
+
+    void setField(int row, int col, Field field) {
+        if (row >= 0 && row < fields.size() && col >= 0 && col < fields[0].size()) {
+            fields[row][col] = field;
+        } else {
+            std::cerr << "Invalid indices" << std::endl;
+        }
+    }
+
+    void setField(const Position& pos, Field field) {
+        setField(pos.x, pos.y, field);
+    }
 
     bool isValidMove(int fromX, int fromY, int toX, int toY) const {
         // Check if target position is within bounds

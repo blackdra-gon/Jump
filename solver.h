@@ -14,11 +14,11 @@ Board importInitialBoard(const std::string& inputFile) {
 }
 
 bool boardAlreadyInQueue(const Board& board, const std::deque<BoardStatus>& queue) {
-    int targetTokenCount = board.countTokens(); // Count the number of tokens on the board
+    int targetTokenCount = board.getNumberOfTokens(); // Count the number of tokens on the board
 
     // Iterate from back to front
     for (auto it = queue.rbegin(); it != queue.rend(); ++it) {
-        int currentTokenCount = it->board.countTokens(); // Count the tokens in the current BoardStatus
+        int currentTokenCount = it->board.getNumberOfTokens(); // Count the tokens in the current BoardStatus
 
         // Break if a BoardStatus has more tokens than the target board
         if (currentTokenCount > targetTokenCount) {
@@ -46,7 +46,7 @@ void processNextBoardStatus(std::deque<BoardStatus>& toProcess) {
     for (Turn current_turn: possible_turns) {
         BoardStatus newBoardStatus(currentBoardStatus);
         newBoardStatus.applyTurn(current_turn);
-        if (newBoardStatus.board.countTokens() == 1) {
+        if (newBoardStatus.board.getNumberOfTokens() == 1) {
             newBoardStatus.print();
             // finished calculation, clear queue
             while (!toProcess.empty()) {
@@ -70,11 +70,11 @@ bool findSolution(const Board& initialBoard) {
     std::deque<BoardStatus> toProcess;
     toProcess.emplace_back(initialBoard);
     int iterations = 0;
-    int currentNumberOfTokens = initialBoard.countTokens();
+    int currentNumberOfTokens = initialBoard.getNumberOfTokens();
     printStatistics(currentNumberOfTokens, 1);
     while (!toProcess.empty()) {
         int numberOfBoardsInCurrentStage;
-        if (toProcess.front().board.countTokens() < currentNumberOfTokens) {
+        if (toProcess.front().board.getNumberOfTokens() < currentNumberOfTokens) {
             currentNumberOfTokens--;
             numberOfBoardsInCurrentStage = toProcess.size();
             printStatistics(currentNumberOfTokens, numberOfBoardsInCurrentStage);
