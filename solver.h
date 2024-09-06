@@ -6,6 +6,8 @@
 #define JUMP_SOLVER_H
 
 #include <deque>
+#include <algorithm>
+#include <execution>
 #include "board.h"
 
 Board importInitialBoard(const std::string& inputFile) {
@@ -14,7 +16,9 @@ Board importInitialBoard(const std::string& inputFile) {
 }
 
 bool boardAlreadyInQueue(const Board& board, const std::deque<BoardStatus>& queue) {
-    int targetTokenCount = board.getNumberOfTokens(); // Count the number of tokens on the board
+    return std::any_of(std::execution::par, queue.begin(), queue.end(),
+                [board] (auto boardStatus) -> bool { return board.is_equivalent(boardStatus.board); });
+    /*int targetTokenCount = board.getNumberOfTokens(); // Count the number of tokens on the board
 
     // Iterate from back to front
     for (auto it = queue.rbegin(); it != queue.rend(); ++it) {
@@ -31,30 +35,33 @@ bool boardAlreadyInQueue(const Board& board, const std::deque<BoardStatus>& queu
         }
     }
 
-    return false; // The board is not in the queue
+    return false; // The board is not in the queue*/
 }
 
 /**
  * Pops the first element of the queue and adds all possible next statuses at the back of the queue.
  * @param toProcess
  */
-void processNextBoardStatus(std::deque<BoardStatus>& toProcess) {
-    BoardStatus currentBoardStatus = toProcess.front();
+void processNextBoardStatus(std::deque<BoardStatus>* readQueue, std::deque<BoardStatus>* writeQueue) {
+    BoardStatus currentBoardStatus = readQueue->front();
     Board currentBoard = currentBoardStatus.board;
-    toProcess.pop_front();
+    readQueue->pop_front();
     std::vector<Turn> possible_turns = currentBoard.getAllPossibleTurns();
     for (Turn current_turn: possible_turns) {
         BoardStatus newBoardStatus(currentBoardStatus);
         newBoardStatus.applyTurn(current_turn);
         if (newBoardStatus.board.getNumberOfTokens() == 1) {
             newBoardStatus.print();
-            // finished calculation, clear queue
-            while (!toProcess.empty()) {
-                toProcess.pop_front();
+            // finished calculation, clear queues
+            while (!readQueue->empty()) {
+                readQueue->pop_front();
+            }
+            while (!writeQueue->empty()) {
+                writeQueue->pop_front();
             }
         } else {
-            if (!boardAlreadyInQueue(newBoardStatus.board, toProcess)) {
-                toProcess.push_back(newBoardStatus);
+            if (!boardAlreadyInQueue(newBoardStatus.board, *writeQueue)) {
+                writeQueue->push_back(newBoardStatus);
             }
         }
     }
@@ -67,26 +74,31 @@ void printStatistics(int numberOfTokens, int numberOfBoardStatus) {
 }
 
 bool findSolution(const Board& initialBoard) {
-    std::deque<BoardStatus> toProcess;
-    toProcess.emplace_back(initialBoard);
+    std::deque<BoardStatus> firstQueue;
+    std::deque<BoardStatus> secondQueue;
+    std::deque<BoardStatus> *readQueue = &firstQueue;
+    std::deque<BoardStatus> *writeQueue = &secondQueue;
+    readQueue->emplace_back(initialBoard);
     int iterations = 0;
     int currentNumberOfTokens = initialBoard.getNumberOfTokens();
     printStatistics(currentNumberOfTokens, 1);
-    while (!toProcess.empty()) {
-        int numberOfBoardsInCurrentStage;
-        if (toProcess.front().board.getNumberOfTokens() < currentNumberOfTokens) {
-            currentNumberOfTokens--;
-            numberOfBoardsInCurrentStage = toProcess.size();
-            printStatistics(currentNumberOfTokens, numberOfBoardsInCurrentStage);
-            iterations = 0;
+    int numberOfBoardsInCurrentStage = 1;
+    // Double while loop shall be finished only when the readQueue is empty after the queues are swapped
+    while (!readQueue->empty()) {
+        while (!readQueue->empty()) {
+            processNextBoardStatus(readQueue, writeQueue);
+            ++iterations;
+            if (iterations % 100 == 0) {
+                std::cout << iterations << "/" << numberOfBoardsInCurrentStage << std::endl;
+                //toProcess.back().print();
+            }
         }
-        processNextBoardStatus(toProcess);
-        ++iterations;
-        if (iterations % 100 == 0) {
-            std::cout << iterations << "/" << numberOfBoardsInCurrentStage << std::endl;
-            //toProcess.back().print();
-        }
-
+        // Print statistics and switch read an write queue
+        currentNumberOfTokens--;
+        numberOfBoardsInCurrentStage = writeQueue->size();
+        printStatistics(currentNumberOfTokens, numberOfBoardsInCurrentStage);
+        iterations = 0;
+        std::swap(readQueue, writeQueue);
     }
     return true;
 }
