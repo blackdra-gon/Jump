@@ -8,6 +8,7 @@
 #include <deque>
 #include <algorithm>
 #include <execution>
+#include <thread>
 #include "board.h"
 
 Board importInitialBoard(const std::string& inputFile) {
@@ -15,9 +16,29 @@ Board importInitialBoard(const std::string& inputFile) {
     return initialBoard;
 }
 
+void boardAlreadyInQueueParallel(const Board& board, const std::deque<BoardStatus>& queue,
+                                 int numberOfThreads, int threadID, bool* result) {
+    for (auto it = queue.begin() + threadID; it < queue.end(); it += numberOfThreads) {
+        if (board.is_equivalent(it->board)) {
+            *result = true;
+        }
+    }
+}
+
 bool boardAlreadyInQueue(const Board& board, const std::deque<BoardStatus>& queue) {
-    return std::any_of(std::execution::par, queue.begin(), queue.end(),
-                [board] (auto boardStatus) -> bool { return board.is_equivalent(boardStatus.board); });
+    //return std::any_of(std::execution::par, queue.begin(), queue.end(),
+    //            [board] (auto boardStatus) -> bool { return board.is_equivalent(boardStatus.board); });
+    bool foundEquivalentBoard = false;
+    bool *result = &foundEquivalentBoard;
+    int numberOfThreads = 12;
+    std::vector<std::thread> threads;
+    for (int i = 0; i < numberOfThreads; ++i) {
+        threads.emplace_back(boardAlreadyInQueueParallel, std::ref(board), std::ref(queue),numberOfThreads, i, result);
+    };
+    for (auto &thread: threads) {
+        thread.join();
+    }
+    return foundEquivalentBoard;
     /*int targetTokenCount = board.getNumberOfTokens(); // Count the number of tokens on the board
 
     // Iterate from back to front
