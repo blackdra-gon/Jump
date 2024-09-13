@@ -19,10 +19,10 @@ enum Field {
 
 class Position {
 public:
-    int x;
-    int y;
+    int row;
+    int column;
 
-    Position(int x, int y) : x(x), y(y) {}
+    Position(int row, int column) : row(row), column(column) {}
 };
 
 class Turn {
@@ -37,15 +37,15 @@ public:
     }
 
     void print() const {
-        std::cout << "Jump from (" << from.x << ", " << from.y << ") to ("
-                  << to.x << ", " << to.y << ")" << std::endl;
+        std::cout << "Jump from (" << from.row << ", " << from.column << ") to ("
+                  << to.row << ", " << to.column << ")" << std::endl;
     }
 
 
 private:
     static bool isValidTurn(Position from, Position to) {
-        int xDiff = std::abs(from.x - to.x);
-        int yDiff = std::abs(from.y - to.y);
+        int xDiff = std::abs(from.column - to.column);
+        int yDiff = std::abs(from.row - to.row);
         return (xDiff == 2 && yDiff == 0) || (xDiff == 0 && yDiff == 2);
     }
 };
@@ -66,6 +66,12 @@ public:
 
     // Copy Constructor
     //Board(Board const &board) : fields(board.fields) {}
+
+    /**
+     * Imports the csv in the way that fields is a vector of rows.
+     *
+     * @param filename csv-file to import
+     */
 
     Board(const std::string& filename) {
         std::ifstream file(filename);
@@ -126,7 +132,7 @@ public:
     }
 
     Field getField(const Position& pos) const {
-        return getField(pos.x, pos.y);
+        return getField(pos.row, pos.column);
     }
 
     bool operator==(const Board& other) const {
@@ -241,9 +247,9 @@ public:
         Position to = turn.to;
 
         // Calculate the middle position
-        int midX = (from.x + to.x) / 2;
-        int midY = (from.y + to.y) / 2;
-        Position middle(midX, midY);
+        int midRow = (from.row + to.row) / 2;
+        int midCol = (from.column + to.column) / 2;
+        Position middle(midRow, midCol);
 
         // Check preconditions
         if (getField(from) == TOKEN && getField(to) == FREE && getField(middle) == TOKEN) {
@@ -258,25 +264,25 @@ public:
     std::vector<Turn> getAllPossibleTurns() const {
         std::vector<Turn> possibleTurns;
 
-        for (int x = 0; x < fields.size(); ++x) {
-            for (int y = 0; y < fields[x].size(); ++y) {
-                if (fields[x][y] == TOKEN) {
+        for (int row = 0; row < fields.size(); ++row) {
+            for (int column = 0; column < fields[row].size(); ++column) {
+                if (fields[row][column] == TOKEN) {
                     // Check possible moves in four directions
                     // Move right
-                    if (isValidMove(x, y, x, y + 2)) {
-                        possibleTurns.emplace_back(Position(x, y), Position(x, y + 2));
+                    if (isValidMove(row, column, row, column + 2)) {
+                        possibleTurns.emplace_back(Position(row, column), Position(row, column + 2));
                     }
                     // Move left
-                    if (isValidMove(x, y, x, y - 2)) {
-                        possibleTurns.emplace_back(Position(x, y), Position(x, y - 2));
+                    if (isValidMove(row, column, row, column - 2)) {
+                        possibleTurns.emplace_back(Position(row, column), Position(row, column - 2));
                     }
                     // Move down
-                    if (isValidMove(x, y, x + 2, y)) {
-                        possibleTurns.emplace_back(Position(x, y), Position(x + 2, y));
+                    if (isValidMove(row, column, row + 2, column)) {
+                        possibleTurns.emplace_back(Position(row, column), Position(row + 2, column));
                     }
                     // Move up
-                    if (isValidMove(x, y, x - 2, y)) {
-                        possibleTurns.emplace_back(Position(x, y), Position(x - 2, y));
+                    if (isValidMove(row, column, row - 2, column)) {
+                        possibleTurns.emplace_back(Position(row, column), Position(row - 2, column));
                     }
                 }
             }
@@ -305,7 +311,7 @@ private:
     }
 
     void setField(const Position& pos, Field field) {
-        setField(pos.x, pos.y, field);
+        setField(pos.row, pos.column, field);
     }
 
     bool isValidMove(int fromX, int fromY, int toX, int toY) const {
