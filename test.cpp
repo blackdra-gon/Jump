@@ -4,6 +4,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include "solver.h"
+#include "board.h"
 
 /*TEST_CASE("One Step Simple Board") {
     Board testBoard = importInitialBoard("../testData/test_board.csv");
@@ -16,7 +17,7 @@
 }*/
 
 TEST_CASE("Test Simple Board") {
-    Board testBoard = importInitialBoard("../testData/test_board.csv");
+    Board testBoard = importBoardFromCsv("../testData/test_board.csv");
     bool found_solution = findSolution(testBoard);
     CHECK(found_solution);
 }
@@ -33,15 +34,15 @@ TEST_CASE("Test Simple Board") {
 }*/
 
 TEST_CASE("Detect Equivalent Boards") {
-    Board test_board = importInitialBoard("../testData/test_board_equivalence_base.csv");
+    Board test_board = importBoardFromCsv("../testData/test_board_equivalence_base.csv");
     std::vector<Board> boards;
-    boards.push_back(importInitialBoard("../testData/test_board_equivalence_90.csv"));
-    boards.push_back(importInitialBoard("../testData/test_board_equivalence_180.csv"));
-    boards.push_back(importInitialBoard("../testData/test_board_equivalence_270.csv"));
-    boards.push_back(importInitialBoard("../testData/test_board_equivalence_horizontal.csv"));
-    boards.push_back(importInitialBoard("../testData/test_board_equivalence_vertical.csv"));
-    boards.push_back(importInitialBoard("../testData/test_board_equivalence_diagonal_1.csv"));
-    boards.push_back(importInitialBoard("../testData/test_board_equivalence_diagonal_2.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_90.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_180.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_270.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_horizontal.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_vertical.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_diagonal_1.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_diagonal_2.csv"));
     CHECK(test_board.is_equivalent(test_board));
     for (auto &other_board: boards) {
         CHECK(!(test_board == other_board));
@@ -49,5 +50,14 @@ TEST_CASE("Detect Equivalent Boards") {
     for (auto &other_board: boards) {
         CHECK(test_board.is_equivalent(other_board));
     }
+}
+
+TEST_CASE("Board Compression") {
+    Board standardBoard("../board.csv");
+    CompressedBoard compressedStandardBoard =  standardBoard.compressedBoard();
+    CHECK(compressedStandardBoard == 0b111111111111111111111101111111111111111111111);
+    Board fromCompressed(0b111111111111111111111101111111111111111111111);
+    CHECK(standardBoard == fromCompressed);
+
 }
 

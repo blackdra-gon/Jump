@@ -17,6 +17,8 @@ enum Field {
     TOKEN
 };
 
+typedef uint64_t CompressedBoard;
+
 class Position {
 public:
     int row;
@@ -57,7 +59,7 @@ public:
     Board() : fields(1, std::vector<Field>(1, FREE)) {}
 
     // Constructor with size
-    Board(int size) : fields(size, std::vector<Field>(size, FREE)) {}
+    //Board(int size) : fields(size, std::vector<Field>(size, FREE)) {}
 
     // Constructor with rows, columns, and initial status
     Board(int size, Field initialValue) : fields(size, std::vector<Field>(size, initialValue)) {
@@ -69,33 +71,42 @@ public:
 
     /**
      * Imports the csv in the way that fields is a vector of rows.
+     * Also the static blockedField variable is set.
+     * One must only import fields of one type (size and blocked fields) in a run of the program
      *
      * @param filename csv-file to import
      */
 
     Board(const std::string& filename) {
+        blockedFields = {};
         std::ifstream file(filename);
         if (!file.is_open()) {
             throw std::runtime_error("Could not open file");
         }
 
         std::vector<std::vector<Field>> tempFields;
+        std::vector<std::vector<bool>> tempBlockedFields;
         std::string line;
         while (std::getline(file, line)) {
             std::stringstream ss(line);
             std::vector<Field> row;
+            std::vector<bool> blockedFieldsRow;
             std::string cell;
             while (std::getline(ss, cell, ',')) {
                 if (cell == "T") {
                     row.push_back(TOKEN);
+                    blockedFieldsRow.push_back(false);
                 } else if (cell == "X") {
                     row.push_back(BLOCKED);
+                    blockedFieldsRow.push_back(true);
                 } else if (cell == "O") {
                     row.push_back(FREE);
+                    blockedFieldsRow.push_back(false);
                 } else {
                     throw std::runtime_error("Invalid character in CSV file");
                 }
             }
+            tempBlockedFields.push_back(blockedFieldsRow);
             tempFields.push_back(row);
         }
 
@@ -107,9 +118,41 @@ public:
                 throw std::runtime_error("The board is not a square");
             }
         }
-
+        blockedFields = tempBlockedFields;
         fields = tempFields;
         numberOfTokens = countTokens();
+    }
+
+    /**
+     * compressedBoard is decompressed to a 2D Vector. The information which fields are blocked is taken from
+     * the static variable blockedFields.
+     * @param compressedBoard
+     */
+    Board(CompressedBoard compressedBoard) {
+
+    }
+
+    /**
+     * The Board is compressed to a 64bit integer in the following way:
+     * The row are iterated from top to bottom, the fields inside the row from left to right.
+     * Blocked fields are skipped, tokens are encoded with 1, empty fields with 0.
+     * The first field of the order described above is encoded with the least significant bit of the integer.
+     * @return
+     */
+    CompressedBoard compressedBoard() {
+        CompressedBoard comBoard = 0;
+        int64_t currentPosition = 1;
+        for (int i = 0; i < fields.size(); ++i) {
+            for (int j = 0; j < fields.size(); ++j) {
+                if (fields[i][j] != BLOCKED) {
+                    if (fields[i][j] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        return comBoard;
     }
 
     void printBoard() const {
@@ -296,10 +339,11 @@ public:
     }
 
 
-
+    static std::vector<std::vector<bool>> blockedFields;
 private:
     std::vector<std::vector<Field>> fields;
     int numberOfTokens;
+
 
 
     void setField(int row, int col, Field field) {
@@ -341,6 +385,7 @@ private:
 
 };
 
+
 class BoardStatus {
 public:
     Board board;
@@ -364,6 +409,16 @@ public:
         std::cout << "Board:" << std::endl;
         board.printBoard();
     }
+};
+
+class BoardStatusCompressed {
+    int64_t fields;
+    std::vector<Turn> turns;
+
+public:
+    /*BoardStatusCompressed(BoardStatus boardStatus) {
+        for (auto row: boardStatus.board.)
+    }*/
 };
 
 

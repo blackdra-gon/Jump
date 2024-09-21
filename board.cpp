@@ -3,3 +3,5 @@
 //
 
 #include "board.h"
+
+std::vector<std::vector<bool>> Board::blockedFields;

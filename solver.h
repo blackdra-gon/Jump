@@ -11,7 +11,7 @@
 #include <thread>
 #include "board.h"
 
-Board importInitialBoard(const std::string& inputFile) {
+Board importBoardFromCsv(const std::string& inputFile) {
     Board initialBoard(inputFile);
     return initialBoard;
 }
