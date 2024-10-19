@@ -58,6 +58,11 @@ TEST_CASE("Board Compression") {
     CHECK(compressedStandardBoard == 0b111111111111111111111101111111111111111111111);
     Board fromCompressed(0b111111111111111111111101111111111111111111111);
     CHECK(standardBoard == fromCompressed);
+    Board smallerBoard("../board_32.csv");
+    CompressedBoard compressedSmallerBoard =  smallerBoard.compressedBoard();
+    CHECK(compressedSmallerBoard == 0b111111111111111101111111111111111);
+    Board fromCompressedSmaller(0b111111111111111101111111111111111);
+    CHECK(smallerBoard == fromCompressedSmaller);
 
 }
 

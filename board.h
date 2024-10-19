@@ -121,6 +121,7 @@ public:
         }
         blockedFields = tempBlockedFields;
         fields = tempFields;
+        fieldSize = fields.size();
         numberOfTokens = countTokens();
     }
 
@@ -130,6 +131,21 @@ public:
      * @param compressedBoard
      */
     Board(CompressedBoard compressedBoard) {
+        for (int i = 0; i < fieldSize; ++i) {
+            std:std::vector<Field> row;
+            for (int j = 0; j < fieldSize; ++j) {
+                if (blockedFields[i][j]) {
+                    row.push_back(BLOCKED);
+                } else if (compressedBoard % 2 == 1) {
+                    row.push_back(TOKEN);
+                    compressedBoard >>= 1;
+                } else {
+                    row.push_back(FREE);
+                    compressedBoard >>= 1;
+                }
+            }
+            fields.push_back(row);
+        }
 
     }
 
@@ -341,6 +357,7 @@ public:
 
 
     static std::vector<std::vector<bool>> blockedFields;
+    static int fieldSize;
 private:
     std::vector<std::vector<Field>> fields;
     int numberOfTokens;

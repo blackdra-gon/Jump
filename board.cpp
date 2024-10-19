@@ -5,3 +5,5 @@
 #include "board.h"
 
 std::vector<std::vector<bool>> Board::blockedFields;
+
+int Board::fieldSize;
