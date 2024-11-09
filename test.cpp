@@ -3,6 +3,9 @@
 //
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
+#include <vector>
 #include "solver.h"
 #include "board.h"
 
@@ -64,5 +67,27 @@ TEST_CASE("Board Compression") {
     Board fromCompressedSmaller(0b111111111111111101111111111111111);
     CHECK(smallerBoard == fromCompressedSmaller);
 
+}
+
+TEST_CASE("Equivalent compressed Boards") {
+    Board test_board = importBoardFromCsv("../testData/test_board_equivalence_base.csv");
+    std::vector<Board> boards;
+    boards.push_back(test_board);
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_90.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_180.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_270.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_horizontal.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_vertical.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_diagonal_1.csv"));
+    boards.push_back(importBoardFromCsv("../testData/test_board_equivalence_diagonal_2.csv"));
+    std::vector<CompressedBoard> compressedBoards;
+    for (auto board: boards) {
+        compressedBoards.push_back(board.compressedBoard());
+    }
+    BoardStatus testStatus(test_board);
+    testStatus.storeEquivalentBoards();
+    for (auto compressedBoard: compressedBoards) {
+        CHECK_THAT(testStatus.equivalentBoards, Catch::Matchers::VectorContains(compressedBoard));
+    }
 }
 

@@ -172,6 +172,123 @@ public:
         return comBoard;
     }
 
+    std::vector<CompressedBoard> equivalentBoards() {
+        size_t last_index = fields.size() - 1;
+        std::vector<CompressedBoard> equivalentBoards;
+        CompressedBoard comBoard = 0;
+        int64_t currentPosition = 1;
+        for (int i = 0; i < fields.size(); ++i) {
+            for (int j = 0; j < fields.size(); ++j) {
+                if (fields[i][j] != BLOCKED) {
+                    if (fields[i][j] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        equivalentBoards.push_back(comBoard);
+        // One Turn
+        comBoard = 0;
+        currentPosition = 1;
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[j][last_index - i] != BLOCKED) {
+                    if (fields[j][last_index - i] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        equivalentBoards.push_back(comBoard);
+        // Two Turns
+        comBoard = 0;
+        currentPosition = 1;
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[last_index - i][last_index - j] != BLOCKED) {
+                    if (fields[last_index - i][last_index - j] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        equivalentBoards.push_back(comBoard);
+        // threeTurns:
+        comBoard = 0;
+        currentPosition = 1;
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[last_index - j][i] != BLOCKED) {
+                    if (fields[last_index - j][i] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        equivalentBoards.push_back(comBoard);
+        // horizontal
+        comBoard = 0;
+        currentPosition = 1;
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[i][last_index - j] != BLOCKED) {
+                    if (fields[i][last_index - j] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        equivalentBoards.push_back(comBoard);
+        // vertical
+        comBoard = 0;
+        currentPosition = 1;
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[last_index - i][j] != BLOCKED) {
+                    if (fields[last_index - i][j] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        equivalentBoards.push_back(comBoard);
+        // diagonal
+        comBoard = 0;
+        currentPosition = 1;
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[j][i] != BLOCKED) {
+                    if (fields[j][i] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        equivalentBoards.push_back(comBoard);
+        // secondDiagonal
+        comBoard = 0;
+        currentPosition = 1;
+        for (size_t i = 0; i < fields.size(); ++i) {
+            for (size_t j = 0; j < fields[i].size(); ++j) {
+                if (fields[last_index - j][last_index - i] != BLOCKED) {
+                    if (fields[last_index - j][last_index - i] == TOKEN) {
+                        comBoard += currentPosition;
+                    }
+                    currentPosition <<= 1;
+                }
+            }
+        }
+        equivalentBoards.push_back(comBoard);
+        return equivalentBoards;
+    }
+
     void printBoard() const {
         for (const auto& row : fields) {
             for (const auto& cell : row) {
@@ -403,14 +520,19 @@ private:
 
 };
 
+class BoardStatusCompressed;
+
 
 class BoardStatus {
 public:
     Board board;
     std::vector<Turn> turns;
+    std::vector<CompressedBoard> equivalentBoards;
 
     // Constructor to initialize the BoardStatus with a given board
     BoardStatus(const Board& board) : board(board) {}
+
+    BoardStatus(const BoardStatusCompressed& compressedBoard);
 
     // Function to apply a turn to the board and add the turn to the vector
     void applyTurn(Turn turn) {
@@ -427,16 +549,33 @@ public:
         std::cout << "Board:" << std::endl;
         board.printBoard();
     }
+
+    void storeEquivalentBoards() {
+        equivalentBoards = board.equivalentBoards();
+    }
+
+    /**
+    Should only be called, when equivalent Board is filled with all (up to) 8 equivalent Boards
+     */
+    bool isEquivalent(BoardStatusCompressed &compressedBoard) {
+        
+    }
 };
 
 class BoardStatusCompressed {
-    int64_t fields;
+    CompressedBoard fields;
     std::vector<Turn> turns;
 
 public:
-    /*BoardStatusCompressed(BoardStatus boardStatus) {
-        for (auto row: boardStatus.board.)
-    }*/
+
+    CompressedBoard getFields() const {
+        return fields;
+    }
+
+    BoardStatusCompressed(BoardStatus &boardStatus) {
+        fields = boardStatus.board.compressedBoard();
+        turns = boardStatus.turns;   // std::move??
+    }
 };
 
 

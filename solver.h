@@ -78,12 +78,13 @@ void processNextBoardStatus(std::deque<BoardStatus>* readQueue, std::deque<Board
         if (newBoardStatus.board.getNumberOfTokens() == 1) {
             newBoardStatus.print();
             // finished calculation, clear queues
-            while (!readQueue->empty()) {
+            // uncomment if you want to calculate only one solution
+            /*while (!readQueue->empty()) {
                 readQueue->pop_front();
             }
             while (!writeQueue->empty()) {
                 writeQueue->pop_front();
-            }
+            }*/
         } else {
             if (!boardAlreadyInQueue(newBoardStatus.board, *writeQueue)) {
                 writeQueue->push_back(newBoardStatus);

@@ -7,3 +7,7 @@
 std::vector<std::vector<bool>> Board::blockedFields;
 
 int Board::fieldSize;
+
+BoardStatus::BoardStatus(const BoardStatusCompressed& compressedBoard) {
+        board = Board(compressedBoard.getFields());
+    }
