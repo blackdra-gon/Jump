@@ -10,4 +10,14 @@ int Board::fieldSize;
 
 BoardStatus::BoardStatus(const BoardStatusCompressed& compressedBoard) {
         board = Board(compressedBoard.getFields());
+        turns = compressedBoard.turns;
     }
+
+bool BoardStatus::isEquivalent(BoardStatusCompressed& compressedBoard) {
+    for (auto board: equivalentBoards) {
+        if (board == compressedBoard.getFields()) {
+            return true;
+        }
+    }
+    return false;
+}

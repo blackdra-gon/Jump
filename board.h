@@ -557,16 +557,15 @@ public:
     /**
     Should only be called, when equivalent Board is filled with all (up to) 8 equivalent Boards
      */
-    bool isEquivalent(BoardStatusCompressed &compressedBoard) {
-        
-    }
+    bool isEquivalent(BoardStatusCompressed &compressedBoard);
 };
 
 class BoardStatusCompressed {
     CompressedBoard fields;
-    std::vector<Turn> turns;
+    
 
 public:
+    std::vector<Turn> turns;
 
     CompressedBoard getFields() const {
         return fields;

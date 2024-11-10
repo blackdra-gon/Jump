@@ -16,27 +16,26 @@ Board importBoardFromCsv(const std::string& inputFile) {
     return initialBoard;
 }
 
-void boardAlreadyInQueueParallel(const Board& board, const std::deque<BoardStatus>& queue,
+void boardAlreadyInQueueParallel(BoardStatus& boardStatus, std::deque<BoardStatusCompressed>& queue,
                                  int numberOfThreads, int threadID, std::atomic<bool>& result) {
     for (auto it = queue.begin() + threadID; it < queue.end(); it += numberOfThreads) {
         if (result) {
             break;
         }
-        if (board.is_equivalent(it->board)) {
+        if (boardStatus.isEquivalent(*it)) {
             result = true;
             break;
         }
     }
 }
 
-bool boardAlreadyInQueue(const Board& board, const std::deque<BoardStatus>& queue) {
-    //return std::any_of(std::execution::par, queue.begin(), queue.end(),
-    //            [board] (auto boardStatus) -> bool { return board.is_equivalent(boardStatus.board); });
+bool boardAlreadyInQueue(BoardStatus& boardStatus, std::deque<BoardStatusCompressed>& queue) {
+    boardStatus.storeEquivalentBoards();
     std::atomic<bool> foundEquivalentBoard(false);
     int numberOfThreads = 12;
     std::vector<std::thread> threads;
     for (int i = 0; i < numberOfThreads; ++i) {
-        threads.emplace_back(boardAlreadyInQueueParallel, std::ref(board), std::ref(queue),numberOfThreads, i,
+        threads.emplace_back(boardAlreadyInQueueParallel, std::ref(boardStatus), std::ref(queue),numberOfThreads, i,
                              std::ref(foundEquivalentBoard));
     };
     for (auto &thread: threads) {
@@ -67,12 +66,14 @@ bool boardAlreadyInQueue(const Board& board, const std::deque<BoardStatus>& queu
  * Pops the first element of the queue and adds all possible next statuses at the back of the queue.
  * @param toProcess
  */
-void processNextBoardStatus(std::deque<BoardStatus>* readQueue, std::deque<BoardStatus>* writeQueue) {
-    BoardStatus currentBoardStatus = readQueue->front();
-    Board currentBoard = currentBoardStatus.board;
+void processNextBoardStatus(std::deque<BoardStatusCompressed>* readQueue, std::deque<BoardStatusCompressed>* writeQueue) {
+    BoardStatusCompressed currentBoardStatus = readQueue->front();
+    // Decompression:
+    Board currentBoard(currentBoardStatus.getFields());
     readQueue->pop_front();
     std::vector<Turn> possible_turns = currentBoard.getAllPossibleTurns();
     for (Turn current_turn: possible_turns) {
+        // here it is decompressed another time, maybe change later
         BoardStatus newBoardStatus(currentBoardStatus);
         newBoardStatus.applyTurn(current_turn);
         if (newBoardStatus.board.getNumberOfTokens() == 1) {
@@ -86,8 +87,9 @@ void processNextBoardStatus(std::deque<BoardStatus>* readQueue, std::deque<Board
                 writeQueue->pop_front();
             }*/
         } else {
-            if (!boardAlreadyInQueue(newBoardStatus.board, *writeQueue)) {
-                writeQueue->push_back(newBoardStatus);
+            if (!boardAlreadyInQueue(newBoardStatus, *writeQueue)) {
+                BoardStatusCompressed newBoardStatusCompressed(newBoardStatus);
+                writeQueue->push_back(newBoardStatusCompressed);
             }
         }
     }
@@ -99,12 +101,13 @@ void printStatistics(int numberOfTokens, int numberOfBoardStatus) {
     std::cout << std::endl;
 }
 
-bool findSolution(const Board& initialBoard) {
-    std::deque<BoardStatus> firstQueue;
-    std::deque<BoardStatus> secondQueue;
-    std::deque<BoardStatus> *readQueue = &firstQueue;
-    std::deque<BoardStatus> *writeQueue = &secondQueue;
-    readQueue->emplace_back(initialBoard);
+bool findSolution(Board& initialBoard) {
+    std::deque<BoardStatusCompressed> firstQueue;
+    std::deque<BoardStatusCompressed> secondQueue;
+    std::deque<BoardStatusCompressed> *readQueue = &firstQueue;
+    std::deque<BoardStatusCompressed> *writeQueue = &secondQueue;
+    BoardStatus initialStatus(initialBoard);
+    readQueue->emplace_back(initialStatus);
     int iterations = 0;
     int currentNumberOfTokens = initialBoard.getNumberOfTokens();
     printStatistics(currentNumberOfTokens, 1);
