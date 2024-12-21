@@ -5,6 +5,7 @@
 #ifndef JUMP_SOLVER_H
 #define JUMP_SOLVER_H
 
+#include <set>
 #include <deque>
 #include <algorithm>
 #include <execution>
@@ -66,17 +67,15 @@ bool boardAlreadyInQueue(BoardStatus& boardStatus, std::deque<BoardStatusCompres
  * Pops the first element of the queue and adds all possible next statuses at the back of the queue.
  * @param toProcess
  */
-void processNextBoardStatus(std::deque<BoardStatusCompressed>* readQueue, std::deque<BoardStatusCompressed>* writeQueue) {
-    BoardStatusCompressed currentBoardStatus = readQueue->front();
+void processNextBoardStatus(BoardStatusCompressed& currentBoardStatus, std::set<BoardStatusCompressed>* writeQueue) {
     // Decompression:
     Board currentBoard(currentBoardStatus.getFields());
-    readQueue->pop_front();
     std::vector<Turn> possible_turns = currentBoard.getAllPossibleTurns();
     for (Turn current_turn: possible_turns) {
         // here it is decompressed another time, maybe change later
         BoardStatus newBoardStatus(currentBoardStatus);
         newBoardStatus.applyTurn(current_turn);
-        if (newBoardStatus.board.getNumberOfTokens() == 1) {
+        if (newBoardStatus.board.getNumberOfTokens() == 1 || newBoardStatus.board.getNumberOfTokens() == 2) {
             newBoardStatus.print();
             // finished calculation, clear queues
             // uncomment if you want to calculate only one solution
@@ -87,9 +86,17 @@ void processNextBoardStatus(std::deque<BoardStatusCompressed>* readQueue, std::d
                 writeQueue->pop_front();
             }*/
         } else {
-            if (!boardAlreadyInQueue(newBoardStatus, *writeQueue)) {
+            newBoardStatus.storeEquivalentBoards();
+            bool equivalentBoardInQueue = false;
+            for (auto board:newBoardStatus.equivalentBoards) {
+                //BoardStatusCompressed boardStatus(board);
+                if (writeQueue->contains(board)) {
+                    equivalentBoardInQueue = true;
+                }
+            }
+            if (!equivalentBoardInQueue) {
                 BoardStatusCompressed newBoardStatusCompressed(newBoardStatus);
-                writeQueue->push_back(newBoardStatusCompressed);
+                writeQueue->insert(newBoardStatusCompressed);
             }
         }
     }
@@ -102,26 +109,27 @@ void printStatistics(int numberOfTokens, int numberOfBoardStatus) {
 }
 
 bool findSolution(Board& initialBoard) {
-    std::deque<BoardStatusCompressed> firstQueue;
-    std::deque<BoardStatusCompressed> secondQueue;
-    std::deque<BoardStatusCompressed> *readQueue = &firstQueue;
-    std::deque<BoardStatusCompressed> *writeQueue = &secondQueue;
+    std::set<BoardStatusCompressed> firstQueue;
+    std::set<BoardStatusCompressed> secondQueue;
+    std::set<BoardStatusCompressed> *readQueue = &firstQueue;
+    std::set<BoardStatusCompressed> *writeQueue = &secondQueue;
     BoardStatus initialStatus(initialBoard);
-    readQueue->emplace_back(initialStatus);
+    readQueue->emplace(initialStatus);
     int iterations = 0;
     int currentNumberOfTokens = initialBoard.getNumberOfTokens();
     printStatistics(currentNumberOfTokens, 1);
     int numberOfBoardsInCurrentStage = 1;
     // Double while loop shall be finished only when the readQueue is empty after the queues are swapped
     while (!readQueue->empty()) {
-        while (!readQueue->empty()) {
-            processNextBoardStatus(readQueue, writeQueue);
+        for (auto boardStatus: *readQueue) {
+            processNextBoardStatus(boardStatus, writeQueue);
             ++iterations;
-            if (iterations % 100 == 0) {
+            if (iterations % 10000 == 0) {
                 std::cout << iterations << "/" << numberOfBoardsInCurrentStage << std::endl;
                 //toProcess.back().print();
             }
         }
+        readQueue->clear();
         // Print statistics and switch read an write queue
         currentNumberOfTokens--;
         numberOfBoardsInCurrentStage = writeQueue->size();

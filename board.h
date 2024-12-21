@@ -131,6 +131,7 @@ public:
      * @param compressedBoard
      */
     Board(CompressedBoard compressedBoard) {
+        int tokenCount = 0;
         for (int i = 0; i < fieldSize; ++i) {
             std:std::vector<Field> row;
             for (int j = 0; j < fieldSize; ++j) {
@@ -139,6 +140,7 @@ public:
                 } else if (compressedBoard % 2 == 1) {
                     row.push_back(TOKEN);
                     compressedBoard >>= 1;
+                    tokenCount++;
                 } else {
                     row.push_back(FREE);
                     compressedBoard >>= 1;
@@ -146,6 +148,7 @@ public:
             }
             fields.push_back(row);
         }
+        numberOfTokens = tokenCount;
 
     }
 
@@ -574,6 +577,14 @@ public:
     BoardStatusCompressed(BoardStatus &boardStatus) {
         fields = boardStatus.board.compressedBoard();
         turns = boardStatus.turns;   // std::move??
+    }
+
+    BoardStatusCompressed(CompressedBoard comBoard) {
+        fields = comBoard;
+    }
+
+    bool operator<(const BoardStatusCompressed& other) const {
+        return fields < other.fields;
     }
 };
 
