@@ -26,6 +26,10 @@ public:
     int column;
 
     Position(int row, int column) : row(row), column(column) {}
+
+    bool operator==(const Position &other) const{
+        return row == other.row && column == other.column;
+    }
 };
 
 class Turn {
@@ -42,6 +46,10 @@ public:
     void print() const {
         std::cout << "Jump from (" << from.row << ", " << from.column << ") to ("
                   << to.row << ", " << to.column << ")" << std::endl;
+    }
+
+    bool operator==(const Turn &other) const {
+        return from == other.from && to == other.to;
     }
 
 
@@ -531,9 +539,14 @@ public:
     Board board;
     std::vector<Turn> turns;
     std::vector<CompressedBoard> equivalentBoards;
+    // A turn sequence is a sequence of turns, where the same token is moved.
+    // Two consecutive turns t1 and t2 belong to the same sequence, iff t1.to == t2.from
+    int numberOfTurnSequences;
 
     // Constructor to initialize the BoardStatus with a given board
-    BoardStatus(const Board& board) : board(board) {}
+    BoardStatus(const Board& board) : board(board) {
+        numberOfTurnSequences = 0;
+    }
 
     BoardStatus(const BoardStatusCompressed& compressedBoard);
 
@@ -561,6 +574,13 @@ public:
     Should only be called, when equivalent Board is filled with all (up to) 8 equivalent Boards
      */
     bool isEquivalent(BoardStatusCompressed &compressedBoard);
+
+private:
+    void adjustNumberOfTurnSequences(Turn nextTurn) {
+        if (turns.empty() || turns.back().to == nextTurn.from) {
+            ++numberOfTurnSequences;
+        } 
+    }
 };
 
 class BoardStatusCompressed {
@@ -569,6 +589,7 @@ class BoardStatusCompressed {
 
 public:
     std::vector<Turn> turns;
+    int numberOfTurnSequences;
 
     CompressedBoard getFields() const {
         return fields;
@@ -577,6 +598,7 @@ public:
     BoardStatusCompressed(BoardStatus &boardStatus) {
         fields = boardStatus.board.compressedBoard();
         turns = boardStatus.turns;   // std::move??
+        numberOfTurnSequences = boardStatus.numberOfTurnSequences;
     }
 
     BoardStatusCompressed(CompressedBoard comBoard) {

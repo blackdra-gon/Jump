@@ -11,6 +11,7 @@ int Board::fieldSize;
 BoardStatus::BoardStatus(const BoardStatusCompressed& compressedBoard) {
         board = Board(compressedBoard.getFields());
         turns = compressedBoard.turns;
+        numberOfTurnSequences = compressedBoard.numberOfTurnSequences;
     }
 
 bool BoardStatus::isEquivalent(BoardStatusCompressed& compressedBoard) {
