@@ -12,6 +12,11 @@
 #include <thread>
 #include "board.h"
 
+// If set to true, when a new Board shall be added to the queue, it is checked if an equivalent Board,
+// which may be turned or flipped, is already in the queue. If set to false, it is only if the exact 
+// same Board is already in the queue.
+#define CHECK_FOR_EQUIVALENT_BOARDS false
+
 Board importBoardFromCsv(const std::string& inputFile) {
     Board initialBoard(inputFile);
     return initialBoard;
@@ -86,14 +91,20 @@ void processNextBoardStatus(BoardStatusCompressed& currentBoardStatus, std::set<
                 writeQueue->pop_front();
             }*/
         } else {
-            newBoardStatus.storeEquivalentBoards();
             bool equivalentBoardInQueue = false;
+#if CHECK_FOR_EQUIVALENT_BOARDS        
+            newBoardStatus.storeEquivalentBoards();
+
             for (auto board:newBoardStatus.equivalentBoards) {
                 //BoardStatusCompressed boardStatus(board);
                 if (writeQueue->contains(board)) {
                     equivalentBoardInQueue = true;
                 }
             }
+#else
+            CompressedBoard newCompressedBoard = newBoardStatus.board.compressedBoard();
+            equivalentBoardInQueue = writeQueue->contains(newCompressedBoard);
+#endif
             if (!equivalentBoardInQueue) {
                 BoardStatusCompressed newBoardStatusCompressed(newBoardStatus);
                 writeQueue->insert(newBoardStatusCompressed);

@@ -562,6 +562,7 @@ public:
         for (const auto& turn : turns) {
             turn.print(); // Using the print function of Turn
         }
+        std::cout << "Number of turn sequences: " << numberOfTurnSequences << std::endl;
         std::cout << "Board:" << std::endl;
         board.printBoard();
     }
