@@ -552,6 +552,7 @@ public:
 
     // Function to apply a turn to the board and add the turn to the vector
     void applyTurn(Turn turn) {
+        adjustNumberOfTurnSequences(turn);
         board.applyTurn(turn);
         turns.push_back(turn);
     }
@@ -578,7 +579,7 @@ public:
 
 private:
     void adjustNumberOfTurnSequences(Turn nextTurn) {
-        if (turns.empty() || turns.back().to == nextTurn.from) {
+        if (turns.empty() || !(turns.back().to == nextTurn.from)) {
             ++numberOfTurnSequences;
         } 
     }

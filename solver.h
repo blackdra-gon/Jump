@@ -80,7 +80,7 @@ void processNextBoardStatus(BoardStatusCompressed& currentBoardStatus, std::set<
         // here it is decompressed another time, maybe change later
         BoardStatus newBoardStatus(currentBoardStatus);
         newBoardStatus.applyTurn(current_turn);
-        if (newBoardStatus.board.getNumberOfTokens() == 1 || newBoardStatus.board.getNumberOfTokens() == 2) {
+        if (newBoardStatus.board.getNumberOfTokens() == 1) {
             newBoardStatus.print();
             // finished calculation, clear queues
             // uncomment if you want to calculate only one solution
