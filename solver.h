@@ -152,7 +152,7 @@ bool findSolution(Board& initialBoard) {
         for (auto boardStatus: *readQueue) {
             processNextBoardStatus(boardStatus, writeQueue);
             ++iterations;
-            if (iterations % 10000 == 0) {
+            if (iterations % 100000 == 0) {
                 std::cout << iterations << "/" << numberOfBoardsInCurrentStage << std::endl;
                 //toProcess.back().print();
             }
