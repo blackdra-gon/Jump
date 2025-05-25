@@ -8,7 +8,6 @@
 #include <set>
 #include <deque>
 #include <algorithm>
-#include <execution>
 #include <thread>
 #include "board.h"
 
@@ -79,6 +78,8 @@ void processNextBoardStatus(BoardStatusCompressed& currentBoardStatus, std::set<
     for (Turn current_turn: possible_turns) {
         // here it is decompressed another time, maybe change later
         BoardStatus newBoardStatus(currentBoardStatus);
+        // TODO: Choose the turn vector, which continues the turn sequence
+        // or the first turn vector otherwise
         newBoardStatus.applyTurn(current_turn);
         if (newBoardStatus.board.getNumberOfTokens() == 1) {
             newBoardStatus.print();
@@ -103,12 +104,28 @@ void processNextBoardStatus(BoardStatusCompressed& currentBoardStatus, std::set<
             }
 #else
             CompressedBoard newCompressedBoard = newBoardStatus.board.compressedBoard();
-            equivalentBoardInQueue = writeQueue->contains(newCompressedBoard);
+            auto boardStatusInQueue = writeQueue->find(newCompressedBoard);
+            equivalentBoardInQueue = boardStatusInQueue != writeQueue->end();
 #endif
             if (!equivalentBoardInQueue) {
                 BoardStatusCompressed newBoardStatusCompressed(newBoardStatus);
                 writeQueue->insert(newBoardStatusCompressed);
-            }
+            } else if (boardStatusInQueue->numberOfTurnSequences > newBoardStatus.numberOfTurnSequences) {
+                // If the new BoardStatus has less turn sequences, replace the old one
+                BoardStatusCompressed newBoardStatusCompressed(newBoardStatus);
+                writeQueue->erase(boardStatusInQueue);
+                writeQueue->insert(newBoardStatusCompressed);
+            } else if (boardStatusInQueue->numberOfTurnSequences == newBoardStatus.numberOfTurnSequences) {
+                // If the number of turn sequences is equal, check if the new BoardStatus ends its turn on a different field
+                if (newBoardStatus.turns.front().back().to != boardStatusInQueue->turns.front().back().to) {
+                    // If the new BoardStatus ends its turn on a different field, add another turn vector
+                    BoardStatusCompressed copyBoardStatusInQueue(*boardStatusInQueue);
+                    copyBoardStatusInQueue.turns.push_back(newBoardStatus.turns.front());
+                    writeQueue->erase(boardStatusInQueue);
+                    writeQueue->insert(copyBoardStatusInQueue);
+                }    
+            
+            } 
         }
     }
 }

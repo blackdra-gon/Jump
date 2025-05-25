@@ -537,7 +537,8 @@ class BoardStatusCompressed;
 class BoardStatus {
 public:
     Board board;
-    std::vector<Turn> turns;
+    // Stores multiple ways to reach the same Board.
+    std::vector<std::vector<Turn>> turns;
     std::vector<CompressedBoard> equivalentBoards;
     // A turn sequence is a sequence of turns, where the same token is moved.
     // Two consecutive turns t1 and t2 belong to the same sequence, iff t1.to == t2.from
@@ -551,16 +552,41 @@ public:
     BoardStatus(const BoardStatusCompressed& compressedBoard);
 
     // Function to apply a turn to the board and add the turn to the vector
+    // If possible, it takes the turn vector, which continues the turn sequence
+    // or the first turn vector otherwise
     void applyTurn(Turn turn) {
-        adjustNumberOfTurnSequences(turn);
+        // start the first turn sequence, if no turn vector exists
+        if (turns.empty()) {
+            turns.push_back(std::vector<Turn>());
+            turns.front().push_back(turn);
+            ++numberOfTurnSequences;
+            board.applyTurn(turn);
+            return;
+        }
+        int turnVectorIndex = turnVectorWhichContinuesSequence(turn); 
+        if (turnVectorIndex != -1) {
+            // Put the turn vector to be continued on the front of the vector
+            // and erase the other turn vectors
+            std::vector<Turn> turnVector = turns[turnVectorIndex];
+            turnVector.push_back(turn);
+            turns.clear();
+            turns.push_back(turnVector);
+        } else {
+            // A new turn sequence is started:
+            ++numberOfTurnSequences;
+            // Erase all turn vectors besides the first
+            while (turns.size() > 1) {
+                turns.pop_back(); // Keep only the first turn vector        
+            }
+            turns.front().push_back(turn);
+        }
         board.applyTurn(turn);
-        turns.push_back(turn);
     }
 
     void print() const {
 
         std::cout << "Turns applied:" << std::endl;
-        for (const auto& turn : turns) {
+        for (const auto& turn : turns.back()) {
             turn.print(); // Using the print function of Turn
         }
         std::cout << "Number of turn sequences: " << numberOfTurnSequences << std::endl;
@@ -578,10 +604,14 @@ public:
     bool isEquivalent(BoardStatusCompressed &compressedBoard);
 
 private:
-    void adjustNumberOfTurnSequences(Turn nextTurn) {
-        if (turns.empty() || !(turns.back().to == nextTurn.from)) {
-            ++numberOfTurnSequences;
-        } 
+
+    int turnVectorWhichContinuesSequence(Turn nextTurn) {
+        for (size_t i = 0; i < turns.size(); ++i) {
+            if (turns[i].back().to == nextTurn.from) {
+                return i;
+            }
+        }
+        return -1; // No turn vector found that continues the sequence
     }
 };
 
@@ -590,7 +620,8 @@ class BoardStatusCompressed {
     
 
 public:
-    std::vector<Turn> turns;
+    // Stores multiple ways to reach the same Board.
+    std::vector<std::vector<Turn>> turns;
     int numberOfTurnSequences;
 
     CompressedBoard getFields() const {
